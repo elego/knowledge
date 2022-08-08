@@ -3,7 +3,8 @@ import Widget from "web.Widget";
 import {_t} from "web.core";
 
 var active_attachment_index = 0;
-var first_click = true;
+var is_first_click = true;
+var first_doc = 0;
 
 var AttachmentPreviewWidget = Widget.extend({
     template: "attachment_preview.AttachmentPreviewWidget",
@@ -17,7 +18,7 @@ var AttachmentPreviewWidget = Widget.extend({
     },
 
     start: function () {
-        first_click = true;
+        // first_click = true;
         var res = this._super.apply(this, arguments);
         this.$overlay = $(".attachment_preview_overlay");
         this.$iframe = $(".attachment_preview_iframe");
@@ -46,7 +47,9 @@ var AttachmentPreviewWidget = Widget.extend({
     },
 
     next: function () {
-        // first_click = false
+        if (is_first_click) {
+            is_first_click = !is_first_click;
+        }
         var index = this.activeIndex + 1;
         if (index >= this.attachments.length) {
             index = 0;
@@ -57,6 +60,9 @@ var AttachmentPreviewWidget = Widget.extend({
     },
 
     previous: function () {
+        if (is_first_click) {
+            is_first_click = !is_first_click;
+        }
         var index = this.activeIndex - 1;
         if (index < 0) {
             index = this.attachments.length - 1;
@@ -72,7 +78,7 @@ var AttachmentPreviewWidget = Widget.extend({
     },
 
     hide: function () {
-        first_click = true;
+        is_first_click = true;
         this.$el.addClass("d-none");
         this.trigger("hidden");
     },
@@ -95,11 +101,11 @@ var AttachmentPreviewWidget = Widget.extend({
             return;
         }
 
-        if (first_click) {
+        if (is_first_click) {
             for (let i = 0; i < this.attachments.length; i++) {
                 if (parseInt(this.attachments[i].id) === this.active_attachment_id) {
                     active_attachment_index = i;
-                    first_click = false;
+                    is_first_click = false;
                 }
             }
         } else {
@@ -110,7 +116,9 @@ var AttachmentPreviewWidget = Widget.extend({
         this.$iframe.attr("src", att.previewUrl);
     },
 
-    setAttachments: function (attachments, active_attachment_id) {
+    setAttachments: function (attachments, active_attachment_id, first_click) {
+        is_first_click = first_click;
+
         if (active_attachment_id) {
             this.active_attachment_id = active_attachment_id;
         }

@@ -44,12 +44,13 @@ FormRenderer.include({
         this.$el.removeClass("attachment_preview");
     },
 
-    showAttachmentPreviewWidget: function () {
+    showAttachmentPreviewWidget: function (first_click) {
         this.$el.addClass("attachment_preview");
         this.chatterpreviewableAttachments = chatterpreviewableAttachments;
         this.attachmentPreviewWidget.setAttachments(
             chatterpreviewableAttachments,
-            active_attachment_id
+            active_attachment_id,
+            first_click
         );
         this.attachmentPreviewWidget.show();
     },
@@ -59,8 +60,9 @@ FormRenderer.include({
         return this._super.apply(this, arguments);
     },
 
-    _onAttachmentPreview: function (event) {
-        this.showAttachmentPreviewWidget();
+    _onAttachmentPreview: function () {
+        first_click = true;
+        this.showAttachmentPreviewWidget(first_click);
     },
 });
 

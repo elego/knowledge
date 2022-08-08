@@ -216,8 +216,11 @@ patch(
         _update() {
             var res = this._super.apply(this, arguments);
             var self = this;
+            console.log("helle there!!");
             self._getPreviewableAttachments().then(
                 function (atts) {
+                    console.log("this is _update()");
+                    console.log(atts);
                     self.previewableAttachments = atts;
                     // this.updatePreviewButtons(this.previewableAttachments);
                     self._updatePreviewButtons(self.previewableAttachments);
@@ -247,6 +250,8 @@ patch(
                 attachments = thread.allAttachments;
             }
 
+            console.log("hello world");
+
             var attachments = _.object(
                 attachments.map((attachment) => {
                     // return parseInt(attachment.localId.slice(16), 10);
@@ -268,6 +273,8 @@ patch(
                     }
                 })
             );
+
+            console.log("attachments 1", attachments);
 
             rpc.query({
                 model: "ir.attachment",
@@ -307,6 +314,8 @@ patch(
                     deferred.reject();
                 }
             );
+
+            console.log("attachments", attachments);
             return deferred.promise();
         },
 
