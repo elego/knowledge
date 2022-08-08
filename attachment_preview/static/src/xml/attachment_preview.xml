@@ -32,7 +32,7 @@
                     t-attf-title="Open preview {{attachmentCard.attachment.name}} in a new tab"
                     tabindex="0"
                     role="menuitem"
-                    aria-label="Open in new page"
+                    aria-label="Open in a new page"
                 >
                     <i class="fa fa-external-link" />
                 </div>

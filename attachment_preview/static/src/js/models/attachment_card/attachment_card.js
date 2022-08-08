@@ -12,6 +12,7 @@ import FormRenderer from "web.FormRenderer";
 import AttachmentPreviewWidget from "../../attachmentPreviewWidget";
 
 var rpc = require("web.rpc");
+var basic_fields = require("web.basic_fields");
 
 var chatterpreviewableAttachments = [];
 var active_attachment_id = 0;
@@ -36,8 +37,10 @@ FormRenderer.include({
     },
 
     start: function () {
-        this._super.apply(this, arguments);
-        this.attachmentPreviewWidget.insertAfter(this.$el);
+        var self = this;
+        return this._super.apply(this, arguments).then(function () {
+            self.attachmentPreviewWidget.insertAfter(self.$el);
+        });
     },
 
     _attachmentPreviewWidgetHidden: function () {
@@ -201,7 +204,7 @@ registerInstancePatchModel(
                         att.__values.url = attachment_url.slice(
                             window.location.origin.length
                         );
-                        active_attURL = att.url;
+                        active_attURL = att.__values.url;
                     }
                 }
             });
@@ -238,11 +241,6 @@ registerInstancePatchModel(
                 attachment_title = this.attachment.filename,
                 attachment_url = this.attachment.defaultSource;
             active_attachment_id = attachment_id;
-
-            console.log(
-                "active_attachment_id in attachment_card",
-                active_attachment_id
-            );
 
             if (attachment_extension) {
                 this._showPreview(

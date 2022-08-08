@@ -11,17 +11,13 @@
     "category": "Knowledge Management",
     "depends": ["web", "mail"],
     "data": [
-        # "views/assets.xml",
     ],
     "qweb": [
-        # "static/src/xml/attachment_preview.xml",
     ],
     'assets': {
         'web._assets_primary_variables': [
-            # 'account/static/src/scss/variables.scss',
         ],
         'web.assets_backend': [
-            # 'attachment_preview/static/src/js/attachment_preview.js',
             'attachment_preview/static/src/js/models/attachment_card/attachment_card.js',
             'attachment_preview/static/src/js/attachmentPreviewWidget.js',
             'attachment_preview/static/src/js/components/chatter/chatter.js',
@@ -29,17 +25,12 @@
             'attachment_preview/static/src/scss/mixins.scss',
         ],
         'web.assets_frontend': [
-            # 'account/static/src/js/account_portal_sidebar.js',
         ],
         'web.assets_tests': [
-            # 'account/static/tests/tours/**/*',
         ],
         'web.qunit_suite_tests': [
-            # ('after', 'web/static/tests/legacy/views/kanban_tests.js', 'account/static/tests/account_payment_field_tests.js'),
-            # ('after', 'web/static/tests/legacy/views/kanban_tests.js', 'account/static/tests/section_and_note_tests.js'),
         ],
         'web.assets_qweb': [
-            # 'account/static/src/xml/**/*',
             'attachment_preview/static/src/xml/attachment_preview.xml',
         ],
     },
