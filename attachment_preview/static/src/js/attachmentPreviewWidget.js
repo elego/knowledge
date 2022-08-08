@@ -1,10 +1,9 @@
 /** @odoo-module */
 import Widget from "web.Widget";
-import {_t} from "web.core";
+// import {_t} from "web.core";
 
 var active_attachment_index = 0;
 var is_first_click = true;
-var first_doc = 0;
 
 var AttachmentPreviewWidget = Widget.extend({
     template: "attachment_preview.AttachmentPreviewWidget",

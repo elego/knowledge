@@ -54,127 +54,9 @@ function canPreview(extension) {
             "otp",
             "fods",
             "ots",
-            // "webm",
-            // "mp4",
-            // "mp3",
         ]) > -1
     );
 }
-
-// var AttachmentPreviewWidget = Widget.extend({
-//     template: "attachment_preview.AttachmentPreviewWidget",
-//     activeIndex: 0,
-
-//     events: {
-//         "click .attachment_preview_close": "_onCloseClick",
-//         "click .attachment_preview_previous": "_onPreviousClick",
-//         "click .attachment_preview_next": "_onNextClick",
-//         "click .attachment_preview_popout": "_onPopoutClick",
-//     },
-
-//     start: function () {
-//         first_click = true;
-//         var res = this._super.apply(this, arguments);
-//         this.$overlay = $(".attachment_preview_overlay");
-//         this.$iframe = $(".attachment_preview_iframe");
-//         this.$current = $(".attachment_preview_current");
-//         return res;
-//     },
-
-//     _onCloseClick: function () {
-//         this.hide();
-//     },
-
-//     _onPreviousClick: function () {
-//         this.previous();
-//     },
-
-//     _onNextClick: function () {
-//         this.next();
-//     },
-
-//     _onPopoutClick: function () {
-//         if (!this.attachments[this.activeIndex]) {
-//             return;
-//         }
-
-//         window.open(this.attachments[this.activeIndex].previewUrl);
-//     },
-
-//     next: function () {
-//         // first_click = false
-//         var index = this.activeIndex + 1;
-//         if (index >= this.attachments.length) {
-//             index = 0;
-//         }
-//         this.activeIndex = index;
-//         this.updatePaginator();
-//         this.loadPreview();
-//     },
-
-//     previous: function () {
-//         var index = this.activeIndex - 1;
-//         if (index < 0) {
-//             index = this.attachments.length - 1;
-//         }
-//         this.activeIndex = index;
-//         this.updatePaginator();
-//         this.loadPreview();
-//     },
-
-//     show: function () {
-//         this.$el.removeClass("d-none");
-//         this.trigger("shown");
-//     },
-
-//     hide: function () {
-//         first_click = true;
-//         this.$el.addClass("d-none");
-//         this.trigger("hidden");
-//     },
-
-//     updatePaginator: function () {
-//         var value = _.str.sprintf(
-//             "%s / %s",
-//             this.activeIndex + 1,
-//             this.attachments.length
-//         );
-//         this.$overlay = $(".attachment_preview_overlay");
-//         this.$iframe = $(".attachment_preview_iframe");
-//         this.$current = $(".attachment_preview_current");
-//         this.$current.html(value);
-//     },
-
-//     loadPreview: function () {
-//         if (this.attachments.length === 0) {
-//             this.$iframe.attr("src", "about:blank");
-//             return;
-//         }
-
-//         if (first_click) {
-//             for (let i = 0; i < this.attachments.length; i++) {
-//                 if (this.attachments[i].id === active_attachment_id.toString()) {
-//                     active_attachment_index = i;
-//                     first_click = false;
-//                 }
-//             }
-//         } else {
-//             active_attachment_index = this.activeIndex;
-//         }
-
-//         var att = this.attachments[active_attachment_index];
-//         this.$iframe.attr("src", att.previewUrl);
-//     },
-
-//     setAttachments: function (attachments) {
-//         if (attachments) {
-//             this.attachments = attachments;
-//             this.activeIndex = 0;
-//             this.updatePaginator();
-//             this.loadPreview();
-//         }
-//     },
-// });
 
 patch(
     components.Chatter.prototype,
@@ -190,6 +72,9 @@ patch(
             this.canPreview = this.canPreview.bind(this);
         },
 
+        /**
+         * @private
+         */
         _showPreview(
             attachment_id,
             attachment_url,
@@ -197,6 +82,17 @@ patch(
             attachment_title,
             split_screen
         ) {
+            let active_attURL = "";
+            this.attachmentList.attachments.forEach((att) => {
+                if (parseInt(att.localId.slice(20).slice(0, -1)) === attachment_id) {
+                    if (att.__values.url === undefined) {
+                        att.__values.url = attachment_url.slice(
+                            window.location.origin.length
+                        );
+                        active_attURL = att.__values.url;
+                    }
+                }
+            });
             var url = getUrl(
                 attachment_id,
                 attachment_url,
@@ -204,7 +100,10 @@ patch(
                 attachment_title
             );
             if (split_screen) {
-                this.trigger("onAttachmentPreview", {url: url});
+                this.component.trigger("onAttachmentPreview", {
+                    url: url,
+                    active_attachment_id: active_attachment_id,
+                });
             } else {
                 window.open(url);
             }
@@ -216,13 +115,9 @@ patch(
         _update() {
             var res = this._super.apply(this, arguments);
             var self = this;
-            console.log("helle there!!");
             self._getPreviewableAttachments().then(
                 function (atts) {
-                    console.log("this is _update()");
-                    console.log(atts);
                     self.previewableAttachments = atts;
-                    // this.updatePreviewButtons(this.previewableAttachments);
                     self._updatePreviewButtons(self.previewableAttachments);
                     if (!self.attachmentPreviewWidget) {
                         self.attachmentPreviewWidget = new AttachmentPreviewWidget(
@@ -246,16 +141,14 @@ patch(
                 this.props.chatterLocalId
             );
             const thread = chatter ? chatter.thread : undefined;
+
             if (thread) {
                 attachments = thread.allAttachments;
             }
 
-            console.log("hello world");
-
             var attachments = _.object(
                 attachments.map((attachment) => {
-                    // return parseInt(attachment.localId.slice(16), 10);
-                    return parseInt(attachment.localId.slice(20).slice(0, -1));
+                    return attachment.id;
                 }),
                 attachments.map((attachment) => {
                     if (attachment.defaultSource) {
@@ -274,14 +167,12 @@ patch(
                 })
             );
 
-            console.log("attachments 1", attachments);
-
             rpc.query({
                 model: "ir.attachment",
                 method: "get_attachment_extension",
                 args: [
                     _.map(_.keys(attachments), function (id) {
-                        return parseInt(id, 10);
+                        return parseInt(id);
                     }),
                 ],
             }).then(
@@ -307,6 +198,7 @@ patch(
                             };
                         }
                     );
+
                     deferred.resolve(reviewableAttachments);
                 },
 
@@ -315,7 +207,6 @@ patch(
                 }
             );
 
-            console.log("attachments", attachments);
             return deferred.promise();
         },
 

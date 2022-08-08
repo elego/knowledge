@@ -46,7 +46,7 @@ FormRenderer.include({
 
     showAttachmentPreviewWidget: function (first_click) {
         this.$el.addClass("attachment_preview");
-        this.chatterpreviewableAttachments = chatterpreviewableAttachments;
+
         this.attachmentPreviewWidget.setAttachments(
             chatterpreviewableAttachments,
             active_attachment_id,
@@ -79,9 +79,6 @@ function canPreview(extension) {
             "otp",
             "fods",
             "ots",
-            // "webm",
-            // "mp4",
-            // "mp3",
         ]) > -1
     );
 }
@@ -128,31 +125,10 @@ registerInstancePatchModel(
             this._super();
             this._onPreviewAttachment = this._onPreviewAttachment.bind(this);
 
-            // chatterpreviewableAttachments = _.object(
-            //     this.attachmentList.attachments.map((attachment) => {
-            //         // return parseInt(attachment.localId.slice(16), 10);
-            //         return parseInt(attachment.localId.slice(20).slice(0, -1));
-            //     }),
-            //     this.attachmentList.attachments.map((attachment) => {
-            //         if (attachment.__values.defaultSource) {
-            //             return {
-            //                 url: attachment.__values.defaultSource,
-            //                 extension: attachment.__values.extension,
-            //                 title: attachment.__values.name,
-            //             };
-            //         } else {
-            //             return {
-            //                 url: "/web/content?id=" + attachment.id + "&download=true",
-            //                 extension: attachment.__values.extension,
-            //                 title: attachment.__values.name,
-            //             };
-            //         }
-            //     })
-            // );
-
             var attachments = _.object(
                 this.attachmentList.attachments.map((attachment) => {
-                    return parseInt(attachment.localId.slice(20).slice(0, -1));
+                    console.log("attachment", attachment);
+                    return attachment.id;
                 }),
                 this.attachmentList.attachments.map((attachment) => {
                     if (
@@ -211,84 +187,6 @@ registerInstancePatchModel(
         /**
          * @private
          */
-        _getPreviewableAttachments: function () {
-            var self = this;
-            var deferred = $.Deferred();
-            var $items = $(".o_attachment_preview");
-
-            const chatter = this.messaging.models["mail.chatter"].get(
-                this.props.chatterLocalId
-            );
-            const thread = chatter ? chatter.thread : undefined;
-            if (thread) {
-                attachments = thread.allAttachments;
-            }
-
-            var attachments = _.object(
-                this.attachmentList.attachments.map((attachment) => {
-                    return parseInt(attachment.localId.slice(20).slice(0, -1));
-                }),
-                this.attachmentList.attachments.map((attachment) => {
-                    if (attachment.defaultSource) {
-                        return {
-                            url: attachment.defaultSource,
-                            extension: attachment.extension,
-                            title: attachment.name,
-                        };
-                    } else {
-                        return {
-                            url: "/web/content?id=" + attachment.id + "&download=true",
-                            extension: attachment.extension,
-                            title: attachment.name,
-                        };
-                    }
-                })
-            );
-
-            rpc.query({
-                model: "ir.attachment",
-                method: "get_attachment_extension",
-                args: [
-                    _.map(_.keys(attachments), function (id) {
-                        return parseInt(id, 10);
-                    }),
-                ],
-            }).then(
-                function (extensions) {
-                    var reviewableAttachments = _.map(
-                        _.keys(
-                            _.pick(extensions, function (extension) {
-                                return canPreview(extension);
-                            })
-                        ),
-                        function (id) {
-                            return {
-                                id: id,
-                                url: attachments[id].url,
-                                extension: extensions[id],
-                                title: attachments[id].title,
-                                previewUrl: getUrl(
-                                    id,
-                                    attachments[id].url,
-                                    extensions[id],
-                                    attachments[id].title
-                                ),
-                            };
-                        }
-                    );
-                    deferred.resolve(reviewableAttachments);
-                },
-
-                function () {
-                    deferred.reject();
-                }
-            );
-            return deferred.promise();
-        },
-
-        /**
-         * @private
-         */
         _showPreview(
             attachment_id,
             attachment_url,
@@ -303,7 +201,7 @@ registerInstancePatchModel(
                         att.__values.url = attachment_url.slice(
                             window.location.origin.length
                         );
-                        active_attURL = att.__values.url;
+                        active_attURL = att.url;
                     }
                 }
             });
@@ -313,6 +211,9 @@ registerInstancePatchModel(
                 attachment_extension,
                 attachment_title
             );
+
+            console.log("active_attachment_id in _showPreview", active_attachment_id);
+            console.log("url in _showPreview", url);
             if (split_screen) {
                 this.component.trigger("onAttachmentPreview", {
                     url: url,
@@ -328,15 +229,6 @@ registerInstancePatchModel(
          */
         _onPreviewAttachment(event) {
             event.preventDefault();
-            // var self = this,
-            //     $target = $(event.currentTarget),
-            //     split_screen = $target.attr("data-target") !== "new",
-            //     attachment_id = parseInt($target.attr("data-id"), 10),
-            //     attachment_extension = "pdf",
-            //     attachment_title = $target.attr("data-original-title"),
-            //     // attachment_url = this.attachmentUrl;
-            //     attachment_url = $target.attr("data-url");
-            // active_attachment_id = attachment_id;
 
             var self = this,
                 $target = $(event.currentTarget),
@@ -344,9 +236,13 @@ registerInstancePatchModel(
                 attachment_id = this.attachment.id,
                 attachment_extension = "pdf",
                 attachment_title = this.attachment.filename,
-                // attachment_url = this.attachmentUrl;
                 attachment_url = this.attachment.defaultSource;
             active_attachment_id = attachment_id;
+
+            console.log(
+                "active_attachment_id in attachment_card",
+                active_attachment_id
+            );
 
             if (attachment_extension) {
                 this._showPreview(
