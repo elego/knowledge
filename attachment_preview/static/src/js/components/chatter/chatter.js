@@ -8,7 +8,11 @@ import AttachmentPreviewWidget from "../../attachmentPreviewWidget";
 const components = {Chatter};
 var rpc = require("web.rpc");
 
+var basic_fields = require("web.basic_fields");
+
 var chatterpreviewableAttachments = [];
+var core = require("web.core");
+var _t = core._t;
 
 function getUrl(attachment_id, attachment_url, attachment_extension, attachment_title) {
     if (attachment_url) {
@@ -227,3 +231,78 @@ patch(
         },
     }
 );
+
+basic_fields.FieldBinaryFile.include(components.Chatter);
+basic_fields.FieldBinaryFile.include({
+    showPreview(
+        attachment_id,
+        attachment_url,
+        attachment_extension,
+        attachment_title,
+        split_screen
+    ) {
+        var url = getUrl(
+            attachment_id,
+            attachment_url,
+            attachment_extension,
+            attachment_title
+        );
+        if (split_screen) {
+            this.trigger("onAttachmentPreview", {url: url});
+        } else {
+            window.open(url);
+        }
+    },
+
+    _renderReadonly: function () {
+        var self = this;
+        this._super.apply(this, arguments);
+
+        if (this.recordData.id) {
+            this._getBinaryExtension().then(function (extension) {
+                if (canPreview(extension)) {
+                    // self._renderPreviewButton(extension, recordData);
+                    self._renderPreviewButton(extension);
+                }
+            });
+        }
+    },
+
+    _renderPreviewButton: function (extension) {
+        this.$previewBtn = $("<a/>");
+        this.$previewBtn.addClass("fa fa-external-link mr-2");
+        this.$previewBtn.attr("href");
+        this.$previewBtn.attr(
+            "title",
+            _.str.sprintf(_t("Preview %s"), this.field.string)
+        );
+        this.$previewBtn.attr("data-extension", extension);
+        this.$el.find(".fa-download").after(this.$previewBtn);
+        this.$previewBtn.on("click", this._onPreview.bind(this));
+    },
+
+    _getBinaryExtension: function () {
+        return rpc.query({
+            model: "ir.attachment",
+            method: "get_binary_extension",
+            args: [this.model, this.recordData.id, this.name, this.attrs.filename],
+        });
+    },
+
+    _onPreview: function (event) {
+        this.showPreview(
+            null,
+            _.str.sprintf(
+                "/web/content?model=%s&field=%s&id=%d",
+                this.model,
+                this.name,
+                this.recordData.id
+            ),
+            $(event.currentTarget).attr("data-extension"),
+            _.str.sprintf(_t("Preview %s"), this.field.string),
+            false
+            // true
+        );
+        event.stopPropagation();
+    },
+});

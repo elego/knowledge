@@ -21,8 +21,8 @@
             'attachment_preview/static/src/js/models/attachment_card/attachment_card.js',
             'attachment_preview/static/src/js/attachmentPreviewWidget.js',
             'attachment_preview/static/src/js/components/chatter/chatter.js',
-            'attachment_preview/static/src/scss/attachment_preview.scss',
             'attachment_preview/static/src/scss/mixins.scss',
+            'attachment_preview/static/src/scss/attachment_preview.scss',
         ],
         'web.assets_frontend': [
         ],
