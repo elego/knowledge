@@ -29,7 +29,6 @@ function getUrl(attachment_id, attachment_url, attachment_extension, attachment_
                 "#" +
                 attachment_url.replace(window.location.origin, "");
         }
-        return url;
     } else {
         var url =
             (window.location.origin || "") +
@@ -43,6 +42,8 @@ function getUrl(attachment_id, attachment_url, attachment_extension, attachment_
             attachment_id +
             "?model%3Dir.attachment";
     }
+
+    return url;
 }
 
 function canPreview(extension) {
@@ -301,7 +302,6 @@ basic_fields.FieldBinaryFile.include({
             $(event.currentTarget).attr("data-extension"),
             _.str.sprintf(_t("Preview %s"), this.field.string),
             false
-            // true
         );
         event.stopPropagation();
     },
